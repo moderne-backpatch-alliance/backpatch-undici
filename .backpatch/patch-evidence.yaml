@@ -1,6 +1,6 @@
 schema: osera-patch-evidence/0.1.0
 producer: moderne
-release: 7.29.2-backpatch-00004
+release: 7.29.2-backpatch-00005
 baseline: v7.29.1+backpatch.baseline
 fixes:
   - cve: CVE-2026-87018
@@ -34,12 +34,20 @@ fixes:
     basis: backport
     artifacts:
       - undici
-    note: "New in this release; upstream's fix in 7.30.1. It closes the advisory: undici vulnerable to cache poisoning and cross-user disclosure via cross-origin redirects."
+    note: "Carried from 7.29.2-backpatch-00004; upstream's fix in 7.30.1. It closes the advisory: undici vulnerable to cache poisoning and cross-user disclosure via cross-origin redirects."
+  - cve: CVE-2026-109841
+    upstream_fix_url: https://github.com/nodejs/undici/commit/18bc8a1e09d15bc45815154a289dcf6fd5254d00
+    advisory_url: https://nvd.nist.gov/vuln/detail/CVE-2026-109841
+    patch_commit_url: https://github.com/moderne-backpatch-alliance/backpatch-undici/commit/8af2182
+    basis: backport
+    artifacts:
+      - undici
+    note: "New in this release; upstream's fix in 7.30.1. It closes the advisory: undici vulnerable to Subresource Integrity bypass via non-lowercase algorithm tokens."
 tests:
-  commit: edf4179f33f0097b7856d0370f4968e4ac2dc871
+  commit: 8af2182a8bbe86b75a10704ea52684f90f3cce15
   command: npm ci --ignore-scripts with a lockfile generated for the tag (upstream has none), then with the tested commit's test/, scripts/ and docs/examples over the packed package, node scripts/generate-pem.js and npm run build:node, then each borp group of upstream's test:javascript:no-jest (borp --timeout 180000, per-test rows recorded) without test:wpt and test:cache-tests, then jest --json; the rows turned into the JUnit report
   runtime: Node.js v22.23.2, npm 10.9.8, borp 0.20.2, jest 30.5.2, macOS 27.2 arm64
-  report: undici-7.29.2-backpatch-00004-tests.zip
-  report_sha256: ba497a7993776051bd17d6045ebde9ab33de18ae80a7806d795809f64b5f9d79
+  report: undici-7.29.2-backpatch-00005-tests.zip
+  report_sha256: 15251229d66d7c144fee7fe1d0cf458db95a90a28df439f211d55ca6a90023cb
   result: pass
-  note: "upstream's test:javascript:no-jest borp groups (without test:wpt and test:cache-tests, which need submodules) and test:jest, against the packed package at the tested commit: 3015 tests, 2996 passed, 0 failed, 19 skipped. The CVE tests (test/interceptors/cache-redirect-origin.js), with this release's production lines reverted at the tested commit: 8 tests, 3 passed, 5 failed, 0 skipped; with them: 8 tests, 8 passed, 0 failed, 0 skipped. Built with no build step for shipped files, npm pack --ignore-scripts in a directory named undici, 201 of npmjs's 210 files for 7.29.1 are identical; the rest are lib/core/symbols.js, lib/dispatcher/agent.js, lib/dispatcher/client-h1.js, lib/dispatcher/client-h2.js, lib/handler/cache-handler.js, lib/handler/deduplication-handler.js, lib/handler/redirect-handler.js, lib/interceptor/decompress.js, package.json. The archive's file-origins.yaml maps each packaged file to the commit, or names its inputs and build. test/issue-3356.js (upstream's regression test for nodejs/undici issue 3356) is a timing flake on this Mac: it timed out in both suite runs on npmjs's 7.29.1 and in 4 of the 8 runs of the items this line's counters port, so it is not caused by the fix. The suite passed on its first run."
+  note: "upstream's test:javascript:no-jest borp groups (without test:wpt and test:cache-tests, which need submodules) and test:jest, against the packed package at the tested commit: 3019 tests, 3000 passed, 0 failed, 19 skipped. The CVE tests (test/subresource-integrity/GHSA-f72v-6w45-q472.js), with this release's production lines reverted at the tested commit: 4 tests, 2 passed, 2 failed, 0 skipped; with them: 4 tests, 4 passed, 0 failed, 0 skipped. Built with no build step for shipped files, npm pack --ignore-scripts in a directory named undici, 199 of npmjs's 210 files for 7.29.1 are identical; the rest are lib/core/symbols.js, lib/dispatcher/agent.js, lib/dispatcher/client-h1.js, lib/dispatcher/client-h2.js, lib/handler/cache-handler.js, lib/handler/deduplication-handler.js, lib/handler/redirect-handler.js, lib/interceptor/decompress.js, lib/web/infra/index.js, lib/web/subresource-integrity/subresource-integrity.js, package.json. The archive's file-origins.yaml maps each packaged file to the commit, or names its inputs and build. test/issue-3356.js (upstream's regression test for nodejs/undici issue 3356) is a timing flake on this Mac: it timed out in both suite runs on npmjs's 7.29.1 and in 4 of the 8 runs of the items this line's counters port, so it is not caused by the fix. The suite passed on its first run."
