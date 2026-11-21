@@ -1,6 +1,6 @@
 schema: osera-patch-evidence/0.1.0
 producer: moderne
-release: 7.29.2-backpatch-00002
+release: 7.29.2-backpatch-00003
 baseline: v7.29.1+backpatch.baseline
 fixes:
   - cve: CVE-2026-87018
@@ -18,12 +18,20 @@ fixes:
     basis: adapted
     artifacts:
       - undici
-    note: "New in this release; upstream's fix in 7.30.1, adapted to 7.29.1. It closes the advisory: undici vulnerable to Denial of Service via unhandled exception in the decompress interceptor."
+    note: "Carried from 7.29.2-backpatch-00002; upstream's fix in 7.30.1, adapted to 7.29.1. It closes the advisory: undici vulnerable to Denial of Service via unhandled exception in the decompress interceptor."
+  - cve: CVE-2026-109383
+    upstream_fix_url: https://github.com/nodejs/undici/commit/04cb74b1db131ff8f5b4557dce811cbf5f4664b4
+    advisory_url: https://nvd.nist.gov/vuln/detail/CVE-2026-109383
+    patch_commit_url: https://github.com/moderne-backpatch-alliance/backpatch-undici/commit/17909d6
+    basis: backport
+    artifacts:
+      - undici
+    note: "New in this release; upstream's fix in 7.30.1. It closes the advisory: undici vulnerable to TLS certificate validation bypass via dropped tls options in Agent."
 tests:
-  commit: 63425ecaf7df58c92e12166f6e7efed986075def
+  commit: 17909d67337ea7818648bce002739c6017b9e9a1
   command: npm ci --ignore-scripts with a lockfile generated for the tag (upstream has none), then with the tested commit's test/, scripts/ and docs/examples over the packed package, node scripts/generate-pem.js and npm run build:node, then each borp group of upstream's test:javascript:no-jest (borp --timeout 180000, per-test rows recorded) without test:wpt and test:cache-tests, then jest --json; the rows turned into the JUnit report
   runtime: Node.js v22.23.2, npm 10.9.8, borp 0.20.2, jest 30.5.2, macOS 27.2 arm64
-  report: undici-7.29.2-backpatch-00002-tests.zip
-  report_sha256: 3b225e8677c9929499a96c7140fbdfdef7c64dff3ff7a8c13fd1b9c640f4d89b
+  report: undici-7.29.2-backpatch-00003-tests.zip
+  report_sha256: 9ac4faa5bb2f1a4b9b4f0125f0d5f39905f41196305465fb094d56d7801aeed8
   result: pass
-  note: "upstream's test:javascript:no-jest borp groups (without test:wpt and test:cache-tests, which need submodules) and test:jest, against the packed package at the tested commit: 3004 tests, 2985 passed, 0 failed, 19 skipped. The CVE tests (test/interceptors/decompress.js), with this release's production lines reverted at the tested commit: 34 tests, 31 passed, 3 failed, 0 skipped; with them: 33 tests, 33 passed, 0 failed, 0 skipped. Built with no build step for shipped files, npm pack --ignore-scripts in a directory named undici, 206 of npmjs's 210 files for 7.29.1 are identical; the rest are lib/dispatcher/client-h1.js, lib/dispatcher/client-h2.js, lib/interceptor/decompress.js, package.json. The archive's file-origins.yaml maps each packaged file to the commit, or names its inputs and build. test/issue-3356.js (upstream's regression test for nodejs/undici issue 3356) is a timing flake on this Mac: it timed out in both suite runs on npmjs's 7.29.1 and in 4 of the 8 runs of the items this line's counters port, so it is not caused by the fix. The suite passed on its first run."
+  note: "upstream's test:javascript:no-jest borp groups (without test:wpt and test:cache-tests, which need submodules) and test:jest, against the packed package at the tested commit: 3007 tests, 2988 passed, 0 failed, 19 skipped. The CVE tests (test/node-test/agent.js), with this release's production lines reverted at the tested commit: 38 tests, 37 passed, 1 failed, 0 skipped; with them: 38 tests, 38 passed, 0 failed, 0 skipped. Built with no build step for shipped files, npm pack --ignore-scripts in a directory named undici, 205 of npmjs's 210 files for 7.29.1 are identical; the rest are lib/dispatcher/agent.js, lib/dispatcher/client-h1.js, lib/dispatcher/client-h2.js, lib/interceptor/decompress.js, package.json. The archive's file-origins.yaml maps each packaged file to the commit, or names its inputs and build. test/issue-3356.js (upstream's regression test for nodejs/undici issue 3356) is a timing flake on this Mac: it timed out in both suite runs on npmjs's 7.29.1 and in 4 of the 8 runs of the items this line's counters port, so it is not caused by the fix. The suite passed on its first run."
