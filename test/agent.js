@@ -1,7 +1,12 @@
 'use strict'
 
 const { test, teardown } = require('tap')
+const assert = require('node:assert/strict')
+const { once } = require('node:events')
+const fs = require('node:fs')
 const http = require('http')
+const https = require('node:https')
+const path = require('node:path')
 const { PassThrough } = require('stream')
 const { kRunning } = require('../lib/core/symbols')
 const {
@@ -15,6 +20,7 @@ const {
   getGlobalDispatcher
 } = require('../')
 const importFresh = require('import-fresh')
+const { closeServerAsPromise } = require('./utils/node-http')
 
 test('setGlobalDispatcher', t => {
   t.plan(2)
@@ -777,6 +783,101 @@ test('the dispatcher is truly global', t => {
   const undiciFresh = importFresh('../index.js')
   t.equal(agent, undiciFresh.getGlobalDispatcher())
   t.end()
+})
+
+test('forwards TLS certificate validation callbacks via tls option', async (t) => {
+  const server = https.createServer({
+    key: fs.readFileSync(path.join(__dirname, 'fixtures', 'key.pem')),
+    cert: fs.readFileSync(path.join(__dirname, 'fixtures', 'cert.pem'))
+  }, (req, res) => {
+    res.end('ok')
+  })
+  t.teardown(() => server.close())
+  server.listen(0, '127.0.0.1')
+  await once(server, 'listening')
+
+  const expectedError = new Error('rejected by custom checkServerIdentity')
+  let identityChecks = 0
+  const agent = new Agent({
+    tls: {
+      ca: fs.readFileSync(path.join(__dirname, 'fixtures', 'ca.pem'), 'utf8'),
+      servername: 'agent1',
+      checkServerIdentity () {
+        identityChecks++
+        return expectedError
+      }
+    }
+  })
+  t.teardown(() => agent.close())
+
+  await assert.rejects(
+    request(`https://localhost:${server.address().port}`, { dispatcher: agent }),
+    /rejected by custom checkServerIdentity/
+  )
+  assert.strictEqual(identityChecks, 1)
+})
+
+test('forwards TLS certificate validation callbacks via connect option', async (t) => {
+  const server = https.createServer({
+    key: fs.readFileSync(path.join(__dirname, 'fixtures', 'key.pem')),
+    cert: fs.readFileSync(path.join(__dirname, 'fixtures', 'cert.pem'))
+  }, (req, res) => {
+    res.end('ok')
+  })
+  t.teardown(() => server.close())
+  server.listen(0, '127.0.0.1')
+  await once(server, 'listening')
+
+  const expectedError = new Error('rejected by custom checkServerIdentity')
+  let identityChecks = 0
+  const agent = new Agent({
+    connect: {
+      ca: fs.readFileSync(path.join(__dirname, 'fixtures', 'ca.pem'), 'utf8'),
+      servername: 'agent1',
+      checkServerIdentity () {
+        identityChecks++
+        return expectedError
+      }
+    }
+  })
+  t.teardown(() => agent.close())
+
+  await assert.rejects(
+    request(`https://localhost:${server.address().port}`, { dispatcher: agent }),
+    /rejected by custom checkServerIdentity/
+  )
+  assert.strictEqual(identityChecks, 1)
+})
+
+test('copies connect and tls options before storing them', async (t) => {
+  const server = http.createServer({ joinDuplicateHeaders: true }, (req, res) => {
+    res.end('ok')
+  })
+  t.teardown(closeServerAsPromise(server))
+  server.listen(0, '127.0.0.1')
+  await once(server, 'listening')
+
+  const connect = { timeout: 100 }
+  const tls = { servername: 'agent1' }
+  let capturedOptions
+  const agent = new Agent({
+    connect,
+    tls,
+    factory (origin, options) {
+      capturedOptions = options
+      return new Pool(origin, options)
+    }
+  })
+  t.teardown(() => agent.close())
+
+  connect.timeout = 200
+  tls.servername = 'agent2'
+  await request(`http://localhost:${server.address().port}`, { dispatcher: agent })
+
+  assert.notStrictEqual(capturedOptions.connect, connect)
+  assert.notStrictEqual(capturedOptions.tls, tls)
+  assert.deepStrictEqual(capturedOptions.connect, { timeout: 100 })
+  assert.deepStrictEqual(capturedOptions.tls, { servername: 'agent1' })
 })
 
 teardown(() => process.exit())
