@@ -612,6 +612,130 @@ tap.test('Should handle 206 partial content - bad-etag', t => {
   })
 })
 
+tap.test('#3900104 - Should not resume a 206 response without a usable content-range', t => {
+  t.plan(6)
+
+  let x = 0
+  const server = createServer({ joinDuplicateHeaders: true }, (_req, res) => {
+    t.strictEqual(x, 0, 'must not retry an uncheckpointed partial response')
+    res.statusCode = 206
+    res.setHeader('content-length', '2')
+    res.setHeader('content-range', 'bytes 0-999')
+    res.write('1', () => res.destroy())
+    x++
+  })
+
+  const dispatchOptions = {
+    method: 'GET',
+    path: '/',
+    retryOptions: {
+      errorCodes: [
+        'ECONNRESET',
+        'ECONNREFUSED',
+        'ENOTFOUND',
+        'ENETDOWN',
+        'ENETUNREACH',
+        'EHOSTDOWN',
+        'EHOSTUNREACH',
+        'EPIPE',
+        'UND_ERR_SOCKET'
+      ]
+    }
+  }
+
+  server.listen(0, () => {
+    const client = new Client(`http://localhost:${server.address().port}`)
+    const handler = new RetryHandler(dispatchOptions, {
+      dispatch: (...args) => {
+        return client.dispatch(...args)
+      },
+      handler: {
+        onConnect () {},
+        onBodySent () {},
+        onHeaders (status) {
+          t.strictEqual(status, 206)
+          return true
+        },
+        onData () {
+          return true
+        },
+        onComplete () {
+          t.fail('should not complete')
+        },
+        onError (err) {
+          t.equal(err.name, 'SocketError')
+          t.equal(err.code, 'UND_ERR_SOCKET')
+          t.equal(err.message, 'other side closed')
+          // the default retry waits 500 ms before dispatching again
+          setTimeout(() => t.strictEqual(x, 1), 1500)
+        }
+      }
+    })
+
+    t.teardown(async () => {
+      await client.destroy()
+      server.close()
+
+      await once(server, 'close')
+    })
+
+    client.dispatch(dispatchOptions, handler)
+  })
+})
+
+tap.test('Should not reject a HEAD response with content-length', t => {
+  t.plan(3)
+
+  const server = createServer({ joinDuplicateHeaders: true }, (req, res) => {
+    res.setHeader('content-length', '1234')
+    res.end()
+  })
+
+  const dispatchOptions = {
+    method: 'HEAD',
+    path: '/'
+  }
+
+  server.listen(0, () => {
+    const client = new Client(`http://localhost:${server.address().port}`)
+    const chunks = []
+    const handler = new RetryHandler(dispatchOptions, {
+      dispatch: (...args) => {
+        return client.dispatch(...args)
+      },
+      handler: {
+        onConnect () {},
+        onBodySent () {},
+        onHeaders (status, rawHeaders) {
+          t.strictEqual(status, 200)
+          const i = rawHeaders.findIndex((h) => h.toString().toLowerCase() === 'content-length')
+          t.strictEqual(rawHeaders[i + 1].toString(), '1234')
+          return true
+        },
+        onData (chunk) {
+          chunks.push(chunk)
+          return true
+        },
+        onComplete () {
+          t.strictEqual(Buffer.concat(chunks).toString(), '')
+        },
+        onError (err) {
+          t.error(err)
+        }
+      }
+    })
+
+    t.teardown(async () => {
+      await client.close()
+      server.close()
+
+      await once(server, 'close')
+    })
+
+    client.dispatch(dispatchOptions, handler)
+  })
+})
+
 tap.test('retrying a request with a body', t => {
   let counter = 0
   const server = createServer()
