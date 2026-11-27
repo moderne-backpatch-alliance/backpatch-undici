@@ -1,6 +1,6 @@
 schema: osera-patch-evidence/0.1.0
 producer: moderne
-release: 5.29.1-backpatch-00011
+release: 5.29.1-backpatch-00012
 baseline: v5.29.0+backpatch.baseline
 fixes:
   - cve: CVE-2026-22036
@@ -90,12 +90,20 @@ fixes:
     basis: backport
     artifacts:
       - undici
-    note: "New in this release; upstream's fix in 6.29.1. It closes the advisory: undici vulnerable to TLS certificate validation bypass via dropped tls options in Agent."
+    note: "Carried from 5.29.1-backpatch-00011; upstream's fix in 6.29.1. It closes the advisory: undici vulnerable to TLS certificate validation bypass via dropped tls options in Agent."
+  - cve: CVE-2026-109932
+    upstream_fix_url: https://github.com/nodejs/undici/commit/39f93e142df03e559fe7c3d1fc7fba9beee2c185
+    advisory_url: https://nvd.nist.gov/vuln/detail/CVE-2026-109932
+    patch_commit_url: https://github.com/moderne-backpatch-alliance/backpatch-undici/commit/bc8eeae176f0
+    basis: adapted
+    artifacts:
+      - undici
+    note: "New in this release; upstream's fix in 6.29.1, adapted to 5.29.0. It closes the advisory: undici WebSocket client vulnerable to Denial of Service via unbounded automatic PONG buffering."
 tests:
-  commit: 2b2ac0a05aeb183b553ee765805e27768203e844
+  commit: bc8eeae176f0b25ccd759a69070bbc213fe1913d
   command: npm install --ignore-scripts (5.29 has no lockfile), node scripts/generate-pem, then tap 16 with the repo's .taprc (tap --no-coverage -R tap test/*.js test/diagnostics-channel/*.js test/cookie/*.js test/websocket/*.js test/fetch/encoding.js) in the packed package with the tested commit's test/ and scripts/ beside it; the CVE tests with the same tap in the tested commit's tree
   runtime: Node.js v20.20.2, tap 16, macOS 27.2 arm64
-  report: undici-5.29.1-backpatch-00011-tests.zip
-  report_sha256: df8a58c48650705af1c8dbf7dbb79cc12ca03fec76e733b9547aa61c098d6715
+  report: undici-5.29.1-backpatch-00012-tests.zip
+  report_sha256: e05f126b9a51a98eb43dd5d04c24ced7df3a9cd40c74c236b3b0c613f4d5ca17
   result: pass
-  note: "upstream's tap suite (test:tap: test/*.js and test/diagnostics-channel/*.js) plus the tap groups the ported tests live in (test/cookie, test/websocket, test/fetch/encoding.js), against the packed package at the tested commit: 1039 tests, 1027 passed, 0 failed, 12 skipped. The CVE tests (test/agent.js), with this release's production lines reverted at the tested commit: 35 tests, 34 passed, 1 failed, 0 skipped, test files exiting non-zero: test/agent.js; with them: 35 tests, 35 passed, 0 failed, 0 skipped. Built with no build step for shipped files, npm pack --ignore-scripts in a directory named undici, 146 of npmjs's 155 files for 5.29.0 are identical; the rest are README.md, lib/agent.js, lib/client.js, lib/cookies/parse.js, lib/cookies/util.js, lib/core/request.js, lib/fetch/index.js, lib/handler/RetryHandler.js, package.json. The archive's file-origins.yaml maps each packaged file to the commit, or names its inputs and build."
+  note: "upstream's tap suite (test:tap: test/*.js and test/diagnostics-channel/*.js) plus the tap groups the ported tests live in (test/cookie, test/websocket, test/fetch/encoding.js), against the packed package at the tested commit: 1042 tests, 1030 passed, 0 failed, 12 skipped. The CVE tests (test/websocket/pong-backpressure.js), with this release's production lines reverted at the tested commit: 3 tests, 0 passed, 3 failed, 0 skipped, test files exiting non-zero: test/websocket/pong-backpressure.js; with them: 3 tests, 3 passed, 0 failed, 0 skipped. Built with no build step for shipped files, npm pack --ignore-scripts in a directory named undici, 145 of npmjs's 155 files for 5.29.0 are identical; the rest are README.md, lib/agent.js, lib/client.js, lib/cookies/parse.js, lib/cookies/util.js, lib/core/request.js, lib/fetch/index.js, lib/handler/RetryHandler.js, lib/websocket/receiver.js, package.json. The archive's file-origins.yaml maps each packaged file to the commit, or names its inputs and build."
