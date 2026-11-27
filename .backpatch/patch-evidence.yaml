@@ -1,6 +1,6 @@
 schema: osera-patch-evidence/0.1.0
 producer: moderne
-release: 5.29.1-backpatch-00008
+release: 5.29.1-backpatch-00009
 baseline: v5.29.0+backpatch.baseline
 fixes:
   - cve: CVE-2026-22036
@@ -66,12 +66,20 @@ fixes:
     basis: adapted
     artifacts:
       - undici
-    note: "New in this release; upstream's fix in 6.28.0, adapted to 5.29.0. It closes the advisory: undici vulnerable to CRLF Injection via blob-like body 'type' property."
+    note: "Carried from 5.29.1-backpatch-00008; upstream's fix in 6.28.0, adapted to 5.29.0. It closes the advisory: undici vulnerable to CRLF Injection via blob-like body 'type' property."
+  - cve: CVE-2026-18540
+    upstream_fix_url: https://github.com/nodejs/undici/commit/ce31bc824b578008faae5d3350da66c1b5f71548
+    advisory_url: https://nvd.nist.gov/vuln/detail/CVE-2026-18540
+    patch_commit_url: https://github.com/moderne-backpatch-alliance/backpatch-undici/commit/118d718b8192
+    basis: adapted
+    artifacts:
+      - undici
+    note: "New in this release; upstream's fix in 6.28.1, adapted to 5.29.0. It closes the advisory: undici vulnerable to downstream response splitting via retry interceptor."
 tests:
-  commit: 64bea57ff5fe733693ce2fe108913241d5c54d7d
+  commit: 118d718b8192521c82ea61fee90b69cfcca152aa
   command: npm install --ignore-scripts (5.29 has no lockfile), node scripts/generate-pem, then tap 16 with the repo's .taprc (tap --no-coverage -R tap test/*.js test/diagnostics-channel/*.js test/cookie/*.js test/websocket/*.js test/fetch/encoding.js) in the packed package with the tested commit's test/ and scripts/ beside it; the CVE tests with the same tap in the tested commit's tree
   runtime: Node.js v20.20.2, tap 16, macOS 27.2 arm64
-  report: undici-5.29.1-backpatch-00008-tests.zip
-  report_sha256: 2193492de4df98764cd6c8e9c916ab21211d676b4e09cf546d78a0fcd25a90b8
+  report: undici-5.29.1-backpatch-00009-tests.zip
+  report_sha256: 28a140b37882cf7c208bd529032992a427f328efc293ae72e2b015cb5fc06215
   result: pass
-  note: "upstream's tap suite (test:tap: test/*.js and test/diagnostics-channel/*.js) plus the tap groups the ported tests live in (test/cookie, test/websocket, test/fetch/encoding.js), against the packed package at the tested commit: 1033 tests, 1021 passed, 0 failed, 12 skipped. The CVE tests (test/request-crlf.js), with this release's production lines reverted at the tested commit: 2 tests, 1 passed, 1 failed, 0 skipped, test files exiting non-zero: test/request-crlf.js; with them: 2 tests, 2 passed, 0 failed, 0 skipped. Built with no build step for shipped files, npm pack --ignore-scripts in a directory named undici, 147 of npmjs's 155 files for 5.29.0 are identical; the rest are README.md, lib/client.js, lib/cookies/parse.js, lib/cookies/util.js, lib/core/request.js, lib/fetch/index.js, lib/handler/RetryHandler.js, package.json. The archive's file-origins.yaml maps each packaged file to the commit, or names its inputs and build."
+  note: "upstream's tap suite (test:tap: test/*.js and test/diagnostics-channel/*.js) plus the tap groups the ported tests live in (test/cookie, test/websocket, test/fetch/encoding.js), against the packed package at the tested commit: 1035 tests, 1023 passed, 0 failed, 12 skipped. The CVE tests (test/retry-handler.js), with this release's production lines reverted at the tested commit: 10 tests, 9 passed, 1 failed, 0 skipped, test files exiting non-zero: test/retry-handler.js; with them: 10 tests, 10 passed, 0 failed, 0 skipped. Built with no build step for shipped files, npm pack --ignore-scripts in a directory named undici, 147 of npmjs's 155 files for 5.29.0 are identical; the rest are README.md, lib/client.js, lib/cookies/parse.js, lib/cookies/util.js, lib/core/request.js, lib/fetch/index.js, lib/handler/RetryHandler.js, package.json. The archive's file-origins.yaml maps each packaged file to the commit, or names its inputs and build."
