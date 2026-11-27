@@ -1,6 +1,6 @@
 schema: osera-patch-evidence/0.1.0
 producer: moderne
-release: 5.29.1-backpatch-00009
+release: 5.29.1-backpatch-00010
 baseline: v5.29.0+backpatch.baseline
 fixes:
   - cve: CVE-2026-22036
@@ -74,12 +74,20 @@ fixes:
     basis: adapted
     artifacts:
       - undici
-    note: "New in this release; upstream's fix in 6.28.1, adapted to 5.29.0. It closes the advisory: undici vulnerable to downstream response splitting via retry interceptor."
+    note: "Carried from 5.29.1-backpatch-00009; upstream's fix in 6.28.1, adapted to 5.29.0. It closes the advisory: undici vulnerable to downstream response splitting via retry interceptor."
+  - cve: CVE-2026-87018
+    upstream_fix_url: https://github.com/nodejs/undici/commit/b40fbfc0651703cf9fa9f6ced68b679f28d8bb28
+    advisory_url: https://nvd.nist.gov/vuln/detail/CVE-2026-87018
+    patch_commit_url: https://github.com/moderne-backpatch-alliance/backpatch-undici/commit/f081214b3b0e
+    basis: adapted
+    artifacts:
+      - undici
+    note: "New in this release; upstream's fix in 6.29.1, adapted to 5.29.0. It closes the advisory: undici vulnerable to Denial of Service via TLS 1.2 certificate-changing renegotiation."
 tests:
-  commit: 118d718b8192521c82ea61fee90b69cfcca152aa
+  commit: f081214b3b0e606492bdd5fd67774c3bdf2870f9
   command: npm install --ignore-scripts (5.29 has no lockfile), node scripts/generate-pem, then tap 16 with the repo's .taprc (tap --no-coverage -R tap test/*.js test/diagnostics-channel/*.js test/cookie/*.js test/websocket/*.js test/fetch/encoding.js) in the packed package with the tested commit's test/ and scripts/ beside it; the CVE tests with the same tap in the tested commit's tree
   runtime: Node.js v20.20.2, tap 16, macOS 27.2 arm64
-  report: undici-5.29.1-backpatch-00009-tests.zip
-  report_sha256: 28a140b37882cf7c208bd529032992a427f328efc293ae72e2b015cb5fc06215
+  report: undici-5.29.1-backpatch-00010-tests.zip
+  report_sha256: 078f8fbc8b4312556e6b8f60b71cbf14fb5958fb4d2dada232c59053167067dd
   result: pass
-  note: "upstream's tap suite (test:tap: test/*.js and test/diagnostics-channel/*.js) plus the tap groups the ported tests live in (test/cookie, test/websocket, test/fetch/encoding.js), against the packed package at the tested commit: 1035 tests, 1023 passed, 0 failed, 12 skipped. The CVE tests (test/retry-handler.js), with this release's production lines reverted at the tested commit: 10 tests, 9 passed, 1 failed, 0 skipped, test files exiting non-zero: test/retry-handler.js; with them: 10 tests, 10 passed, 0 failed, 0 skipped. Built with no build step for shipped files, npm pack --ignore-scripts in a directory named undici, 147 of npmjs's 155 files for 5.29.0 are identical; the rest are README.md, lib/client.js, lib/cookies/parse.js, lib/cookies/util.js, lib/core/request.js, lib/fetch/index.js, lib/handler/RetryHandler.js, package.json. The archive's file-origins.yaml maps each packaged file to the commit, or names its inputs and build."
+  note: "upstream's tap suite (test:tap: test/*.js and test/diagnostics-channel/*.js) plus the tap groups the ported tests live in (test/cookie, test/websocket, test/fetch/encoding.js), against the packed package at the tested commit: 1036 tests, 1024 passed, 0 failed, 12 skipped. The CVE tests (test/tls-renegotiation.js), with this release's production lines reverted at the tested commit: 2 tests, 0 passed, 2 failed, 0 skipped, test files exiting non-zero: test/tls-renegotiation.js; with them: 1 tests, 1 passed, 0 failed, 0 skipped. Built with no build step for shipped files, npm pack --ignore-scripts in a directory named undici, 147 of npmjs's 155 files for 5.29.0 are identical; the rest are README.md, lib/client.js, lib/cookies/parse.js, lib/cookies/util.js, lib/core/request.js, lib/fetch/index.js, lib/handler/RetryHandler.js, package.json. The archive's file-origins.yaml maps each packaged file to the commit, or names its inputs and build."
