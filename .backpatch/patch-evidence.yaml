@@ -1,6 +1,6 @@
 schema: osera-patch-evidence/0.1.0
 producer: moderne
-release: 5.29.1-backpatch-00006
+release: 5.29.1-backpatch-00007
 baseline: v5.29.0+backpatch.baseline
 fixes:
   - cve: CVE-2026-22036
@@ -50,12 +50,20 @@ fixes:
     basis: adapted
     artifacts:
       - undici
-    note: "New in this release; upstream's fix in 6.28.0, adapted to 5.29.0. It closes the advisory: undici vulnerable to cookie attribute injection via unsanitized domain and unparsed setCookie fields."
+    note: "Carried from 5.29.1-backpatch-00006; upstream's fix in 6.28.0, adapted to 5.29.0. It closes the advisory: undici vulnerable to cookie attribute injection via unsanitized domain and unparsed setCookie fields."
+  - cve: CVE-2026-16728
+    upstream_fix_url: https://github.com/nodejs/undici/commit/cba3a52ac2e7abcc4e656d82af8579ea82c2bb9e
+    advisory_url: https://nvd.nist.gov/vuln/detail/CVE-2026-16728
+    patch_commit_url: https://github.com/moderne-backpatch-alliance/backpatch-undici/commit/0643edd93ffa
+    basis: adapted
+    artifacts:
+      - undici
+    note: "New in this release; upstream's fix in 6.28.0 (cba3a52, 4fd5a0c), adapted to 5.29.0. It closes the advisory: undici vulnerable to downstream response desynchronization via retry interceptor."
 tests:
-  commit: 4b04a2a7a7a53e60ea20f3ffd31a54c00d5a98fa
+  commit: 0643edd93ffaa1e2495568f265d8a66d0dafeaba
   command: npm install --ignore-scripts (5.29 has no lockfile), node scripts/generate-pem, then tap 16 with the repo's .taprc (tap --no-coverage -R tap test/*.js test/diagnostics-channel/*.js test/cookie/*.js test/websocket/*.js test/fetch/encoding.js) in the packed package with the tested commit's test/ and scripts/ beside it; the CVE tests with the same tap in the tested commit's tree
   runtime: Node.js v20.20.2, tap 16, macOS 27.2 arm64
-  report: undici-5.29.1-backpatch-00006-tests.zip
-  report_sha256: 0f8f491cd87727007b888a6111cc8962b71537da84022b93253999bba53547dc
+  report: undici-5.29.1-backpatch-00007-tests.zip
+  report_sha256: c58a6cafa628a4f22b2cc57caba6b9fe283e2d09a91ecc6a9a452216c6c2c4ea
   result: pass
-  note: "upstream's tap suite (test:tap: test/*.js and test/diagnostics-channel/*.js) plus the tap groups the ported tests live in (test/cookie, test/websocket, test/fetch/encoding.js), against the packed package at the tested commit: 1031 tests, 1019 passed, 0 failed, 12 skipped. The CVE tests (test/cookie/cookies.js test/cookie/validate-cookie-domain.js test/cookie/validate-cookie-path.js), with this release's production lines reverted at the tested commit: 13 tests, 10 passed, 3 failed, 0 skipped, test files exiting non-zero: test/cookie/cookies.js test/cookie/validate-cookie-domain.js test/cookie/validate-cookie-path.js; with them: 13 tests, 13 passed, 0 failed, 0 skipped. Built with no build step for shipped files, npm pack --ignore-scripts in a directory named undici, 148 of npmjs's 155 files for 5.29.0 are identical; the rest are README.md, lib/client.js, lib/cookies/parse.js, lib/cookies/util.js, lib/core/request.js, lib/fetch/index.js, package.json. The archive's file-origins.yaml maps each packaged file to the commit, or names its inputs and build."
+  note: "upstream's tap suite (test:tap: test/*.js and test/diagnostics-channel/*.js) plus the tap groups the ported tests live in (test/cookie, test/websocket, test/fetch/encoding.js), against the packed package at the tested commit: 1032 tests, 1020 passed, 0 failed, 12 skipped. The CVE tests (test/retry-handler.js), with this release's production lines reverted at the tested commit: 8 tests, 7 passed, 1 failed, 0 skipped, test files exiting non-zero: test/retry-handler.js; with them: 8 tests, 8 passed, 0 failed, 0 skipped. Built with no build step for shipped files, npm pack --ignore-scripts in a directory named undici, 147 of npmjs's 155 files for 5.29.0 are identical; the rest are README.md, lib/client.js, lib/cookies/parse.js, lib/cookies/util.js, lib/core/request.js, lib/fetch/index.js, lib/handler/RetryHandler.js, package.json. The archive's file-origins.yaml maps each packaged file to the commit, or names its inputs and build."
