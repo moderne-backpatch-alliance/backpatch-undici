@@ -1,6 +1,6 @@
 schema: osera-patch-evidence/0.1.0
 producer: moderne
-release: 5.29.1-backpatch-00004
+release: 5.29.1-backpatch-00005
 baseline: v5.29.0+backpatch.baseline
 fixes:
   - cve: CVE-2026-22036
@@ -34,12 +34,20 @@ fixes:
     basis: adapted
     artifacts:
       - undici
-    note: "New in this release; upstream's fix in 6.27.0, adapted to 5.29.0. It closes the advisory: undici vulnerable to HTTP response queue poisoning via keep-alive socket reuse."
+    note: "Carried from 5.29.1-backpatch-00004; upstream's fix in 6.27.0, adapted to 5.29.0. It closes the advisory: undici vulnerable to HTTP response queue poisoning via keep-alive socket reuse."
+  - cve: CVE-2026-11525
+    upstream_fix_url: https://github.com/nodejs/undici/commit/25efa447997f74d5881edd144525c3fd7db945a4
+    advisory_url: https://nvd.nist.gov/vuln/detail/CVE-2026-11525
+    patch_commit_url: https://github.com/moderne-backpatch-alliance/backpatch-undici/commit/be02f628d4bd
+    basis: backport
+    artifacts:
+      - undici
+    note: "New in this release; upstream's fix in 6.27.0. It closes the advisory: undici vulnerable to Set-Cookie SameSite attribute downgrade via permissive substring matching."
 tests:
-  commit: e6dd9bd2cdc561071998d6abbd1586cf37912ac4
+  commit: be02f628d4bd39c518136bc6bf86954e58b94660
   command: npm install --ignore-scripts (5.29 has no lockfile), node scripts/generate-pem, then tap 16 with the repo's .taprc (tap --no-coverage -R tap test/*.js test/diagnostics-channel/*.js test/cookie/*.js test/websocket/*.js test/fetch/encoding.js) in the packed package with the tested commit's test/ and scripts/ beside it; the CVE tests with the same tap in the tested commit's tree
   runtime: Node.js v20.20.2, tap 16, macOS 27.2 arm64
-  report: undici-5.29.1-backpatch-00004-tests.zip
-  report_sha256: 688d4c16d86305477eca00ab97e40610631d959240a3eaebb8ad3eb9580ef5a1
+  report: undici-5.29.1-backpatch-00005-tests.zip
+  report_sha256: e800f92a5bfd4d838f8bf53abfe34bdf5c6deb906edc094e38f7a9e7d1b103c6
   result: pass
-  note: "upstream's tap suite (test:tap: test/*.js and test/diagnostics-channel/*.js) plus the tap groups the ported tests live in (test/cookie, test/websocket, test/fetch/encoding.js), against the packed package at the tested commit: 1026 tests, 1014 passed, 0 failed, 12 skipped. The CVE tests (test/issue-810.js test/response-queue-poisoning.js), with this release's production lines reverted at the tested commit: 5 tests, 4 passed, 1 failed, 0 skipped, test files exiting non-zero: test/issue-810.js; with them: 5 tests, 5 passed, 0 failed, 0 skipped. Built with no build step for shipped files, npm pack --ignore-scripts in a directory named undici, 150 of npmjs's 155 files for 5.29.0 are identical; the rest are README.md, lib/client.js, lib/core/request.js, lib/fetch/index.js, package.json. The archive's file-origins.yaml maps each packaged file to the commit, or names its inputs and build."
+  note: "upstream's tap suite (test:tap: test/*.js and test/diagnostics-channel/*.js) plus the tap groups the ported tests live in (test/cookie, test/websocket, test/fetch/encoding.js), against the packed package at the tested commit: 1028 tests, 1016 passed, 0 failed, 12 skipped. The CVE tests (test/cookie/cookies.js), with this release's production lines reverted at the tested commit: 10 tests, 9 passed, 1 failed, 0 skipped, test files exiting non-zero: test/cookie/cookies.js; with them: 10 tests, 10 passed, 0 failed, 0 skipped. Built with no build step for shipped files, npm pack --ignore-scripts in a directory named undici, 149 of npmjs's 155 files for 5.29.0 are identical; the rest are README.md, lib/client.js, lib/cookies/parse.js, lib/core/request.js, lib/fetch/index.js, package.json. The archive's file-origins.yaml maps each packaged file to the commit, or names its inputs and build."
