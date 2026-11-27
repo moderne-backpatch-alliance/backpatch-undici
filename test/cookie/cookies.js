@@ -23,6 +23,7 @@
 'use strict'
 
 const { test } = require('tap')
+const assert = require('node:assert')
 const {
   deleteCookie,
   getCookies,
@@ -613,4 +614,47 @@ test('Set-Cookie parser', (t) => {
   t.same(getSetCookies(headers), [])
 
   t.end()
+})
+
+test('Set-Cookie parser does not percent-decode cookie values', async () => {
+  assert.deepEqual(
+    getSetCookies(new Headers({
+      'set-cookie': 'token=legit%0d%0aSet-Cookie:%20evil=injected%3B%20Path%3D/'
+    })),
+    [{
+      name: 'token',
+      value: 'legit%0d%0aSet-Cookie:%20evil=injected%3B%20Path%3D/'
+    }]
+  )
+
+  assert.deepEqual(getSetCookies(new Headers({
+    'set-cookie': 'data=prefix%00suffix'
+  })), [{
+    name: 'data',
+    value: 'prefix%00suffix'
+  }])
+})
+
+test('Set-Cookie parser only accepts exact SameSite values', async () => {
+  assert.deepEqual(getSetCookies(new Headers({
+    'set-cookie': 'a=b; SameSite=none'
+  })), [{
+    name: 'a',
+    value: 'b',
+    sameSite: 'None'
+  }])
+
+  assert.deepEqual(getSetCookies(new Headers({
+    'set-cookie': 'a=b; SameSite=StrictLax'
+  })), [{
+    name: 'a',
+    value: 'b'
+  }])
+
+  assert.deepEqual(getSetCookies(new Headers({
+    'set-cookie': 'a=b; SameSite=NoneOfYourBusiness'
+  })), [{
+    name: 'a',
+    value: 'b'
+  }])
 })
